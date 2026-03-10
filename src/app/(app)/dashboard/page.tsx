@@ -53,7 +53,7 @@ export default async function DashboardPage() {
           <div className="mt-3 text-sm text-zinc-600">오늘 등록된 근무기록이 없습니다.</div>
         ) : (
           <ul className="mt-3 divide-y divide-zinc-200">
-            {todayAttendances.map((a) => (
+            {todayAttendances.map((a: any) => (
               <li key={`${a.employee.name}-${a.startTime.toISOString()}`} className="py-2 text-sm">
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{a.employee.name}</div>
