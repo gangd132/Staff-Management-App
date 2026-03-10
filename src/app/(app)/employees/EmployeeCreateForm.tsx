@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useState } from "react";
 import { buildHalfHourOptions } from "@/lib/timeOnly";
 import { createEmployeeAction, type EmployeeActionState } from "@/app/(app)/employees/actions";
 
@@ -9,6 +10,7 @@ const timeOptions = buildHalfHourOptions();
 
 export default function EmployeeCreateForm() {
   const [state, formAction, pending] = useActionState(createEmployeeAction, initialState);
+  const [selectedColorValue, setSelectedColorValue] = useState<string>("");
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
@@ -51,12 +53,54 @@ export default function EmployeeCreateForm() {
           <label className="text-sm font-medium" htmlFor="color">
             색상 태그(선택)
           </label>
-          <input
-            id="color"
-            name="color"
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-            placeholder="#22c55e"
-          />
+          <div className="flex items-center gap-3">
+            <div
+              className="h-8 w-8 rounded-xl border border-zinc-200"
+              style={{ backgroundColor: selectedColorValue || "#e4e4e7" }}
+              aria-hidden
+            />
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                id="color"
+                type="color"
+                className="h-9 w-16 cursor-pointer rounded-md border border-zinc-200 bg-white px-1 py-1"
+                value={selectedColorValue || "#22c55e"}
+                onChange={(event) => {
+                  const nextColorValue = event.target.value;
+                  setSelectedColorValue(nextColorValue);
+                }}
+              />
+              <input
+                type="text"
+                className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-zinc-900/10"
+                value={selectedColorValue}
+                onChange={(event) => {
+                  const nextColorValue = event.target.value;
+                  setSelectedColorValue(nextColorValue);
+                }}
+                placeholder="#22c55e"
+              />
+            </div>
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
+            <input
+              id="color-none"
+              type="checkbox"
+              className="h-3 w-3 rounded border-zinc-300"
+              checked={!selectedColorValue}
+              onChange={(event) => {
+                if (event.target.checked) {
+                  setSelectedColorValue("");
+                } else {
+                  setSelectedColorValue("#22c55e");
+                }
+              }}
+            />
+            <label htmlFor="color-none" className="cursor-pointer select-none">
+              색상 사용 안 함
+            </label>
+          </div>
+          <input type="hidden" name="color" value={selectedColorValue} />
         </div>
 
         <div className="space-y-1">

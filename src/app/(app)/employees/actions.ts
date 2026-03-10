@@ -135,3 +135,22 @@ export async function toggleEmployeeActiveAction(employeeId: string) {
   revalidatePath("/employees");
 }
 
+export async function deleteEmployeeAction(employeeId: string) {
+  const session = await getSessionFromCookies();
+  if (!session) redirect("/login");
+
+  const employee = await prisma.employee.findFirst({
+    where: { id: employeeId, userId: session.userId },
+    select: { id: true },
+  });
+  if (!employee) {
+    return;
+  }
+
+  await prisma.employee.delete({
+    where: { id: employeeId },
+  });
+
+  revalidatePath("/employees");
+}
+

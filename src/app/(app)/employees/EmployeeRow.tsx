@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { buildHalfHourOptions } from "@/lib/timeOnly";
 import {
   toggleEmployeeActiveAction,
+  deleteEmployeeAction,
   updateEmployeeAction,
   type EmployeeActionState,
 } from "@/app/(app)/employees/actions";
@@ -30,6 +31,7 @@ export default function EmployeeRow({
 }: Props) {
   const [state, formAction, pending] = useActionState(updateEmployeeAction, initialState);
   const toggleAction = toggleEmployeeActiveAction.bind(null, employeeId);
+  const deleteAction = deleteEmployeeAction.bind(null, employeeId);
 
   return (
     <div className="rounded-2xl border border-zinc-200 p-4">
@@ -46,14 +48,30 @@ export default function EmployeeRow({
           </div>
         </div>
 
-        <form action={toggleAction}>
-          <button
-            type="submit"
-            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs hover:bg-zinc-50"
+        <div className="flex items-center gap-2">
+          <form action={toggleAction}>
+            <button
+              type="submit"
+              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs hover:bg-zinc-50"
+            >
+              {isActive ? "비활성화" : "활성화"}
+            </button>
+          </form>
+          <form
+            action={async () => {
+              const isConfirmed = window.confirm("이 직원을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
+              if (!isConfirmed) return;
+              await deleteAction();
+            }}
           >
-            {isActive ? "비활성화" : "활성화"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+            >
+              삭제
+            </button>
+          </form>
+        </div>
       </div>
 
       <form action={formAction} className="mt-3 grid gap-3 sm:grid-cols-2">
