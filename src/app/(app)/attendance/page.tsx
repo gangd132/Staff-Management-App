@@ -90,7 +90,7 @@ export default async function AttendancePage({
           <div className="mt-3 text-sm text-zinc-600">등록된 근무기록이 없습니다.</div>
         ) : (
           <ul className="mt-3 divide-y divide-zinc-200">
-            {attendances.map((a) => (
+            {attendances.map((a: any) => (
               <li key={a.id} className="py-2 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
