@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const totalHours = todayAttendances.reduce((acc, a) => acc + Number(a.hoursWorked), 0);
+  const totalHours = todayAttendances.reduce((acc: number, a: any) => acc + Number(a.hoursWorked), 0);
 
   return (
     <div className="space-y-6">
