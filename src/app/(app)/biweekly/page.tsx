@@ -114,7 +114,7 @@ export default async function BiweeklyPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {employees.map((e) => {
+              {employees.map((e: any) => {
                 const agg = byEmployee.get(e.id) ?? { week1Hours: 0, week2Hours: 0, totalHours: 0 };
                 const week1Ok = agg.week1Hours >= 15;
                 const week2Ok = agg.week2Hours >= 15;
