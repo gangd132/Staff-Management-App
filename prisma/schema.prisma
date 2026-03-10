@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  bizName      String     @map("biz_name")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  employees    Employee[]
+
+  @@map("users")
+}
+
+model Employee {
+  id           String       @id @default(cuid())
+  userId       String       @map("user_id")
+  name         String
+  defaultStart DateTime?    @db.Time(0) @map("default_start")
+  color        String?      // 예: "#22c55e"
+  hourlyWage   Int?         @map("hourly_wage") // 원 단위
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendances  Attendance[]
+
+  @@index([userId])
+  @@map("employees")
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  employeeId  String    @map("employee_id")
+  workDate    DateTime  @db.Date @map("work_date")
+  startTime   DateTime  @db.Time(0) @map("start_time")
+  endTime     DateTime  @db.Time(0) @map("end_time")
+  hoursWorked Decimal   @db.Decimal(5, 2) @map("hours_worked") // 0.50 단위
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, workDate])
+  @@index([workDate])
+  @@map("attendances")
+}

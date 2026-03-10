@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: staff-management-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: staffapp
+      POSTGRES_PASSWORD: staffapp_password
+      POSTGRES_DB: staffapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - staff_management_pgdata:/var/lib/postgresql/data
+
+volumes:
+  staff_management_pgdata:
