@@ -37,7 +37,7 @@ export default async function EmployeesPage() {
             등록된 직원이 없습니다. 먼저 직원을 추가해주세요.
           </div>
         ) : (
-          employees.map((e) => (
+          employees.map((e: any) => (
             <EmployeeRow
               key={e.id}
               employeeId={e.id}
