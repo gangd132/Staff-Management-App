@@ -72,7 +72,7 @@ export default async function AttendancePage({
       ) : (
         <AttendanceEntryForm
           workDate={workDate}
-          employees={employees.map((e) => ({
+          employees={employees.map((e: any) => ({
             id: e.id,
             name: e.name,
             defaultStart: e.defaultStart ? dateToTimeString(e.defaultStart) : null,
