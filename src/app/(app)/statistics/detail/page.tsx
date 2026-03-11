@@ -95,7 +95,7 @@ export default async function StatisticsDetailPage({
         <div>
           <h1 className="text-2xl font-semibold">인건비 상세 · {employee.name}</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            {format(monthStart, "yyyy년 M월")} 주차별 근무시간·기본급·주휴수당 내역입니다. (4시간 이상 근무 시 0.5시간 휴게 공제 반영)
+            {format(monthStart, "yyyy년 M월")} 주차별 근무시간·기본급·주휴수당 내역입니다. (4시간 이상 0.5시간·8시간 이상 1시간 휴게 공제 반영)
           </p>
         </div>
         <Link

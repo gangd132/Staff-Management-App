@@ -115,7 +115,7 @@ export default async function StatisticsPage({
       <div>
         <h1 className="text-2xl font-semibold">월별 통계</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          월 총 근무시간(4시간 이상 시 0.5시간 휴게 공제 반영)·근무일수·주차별 추이·기본급·주휴수당·예상 월급을 확인하세요.
+          월 총 근무시간(4시간 이상 0.5시간·8시간 이상 1시간 휴게 공제 반영)·근무일수·주차별 추이·기본급·주휴수당·예상 월급을 확인하세요.
         </p>
       </div>
 
