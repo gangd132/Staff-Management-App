@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { registerAction, type ActionState } from "@/app/(auth)/actions";
 
 const initialState: ActionState = { ok: true };
+const PASSWORD_MIN_LENGTH = 10;
 
 export default function RegisterForm() {
   const [state, formAction, pending] = useActionState(registerAction, initialState);
@@ -51,9 +52,31 @@ export default function RegisterForm() {
             name="password"
             type="password"
             required
-            minLength={8}
+            minLength={PASSWORD_MIN_LENGTH}
+            autoComplete="new-password"
+            pattern={`^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z\\d])\\S{${PASSWORD_MIN_LENGTH},}$`}
+            title="비밀번호는 10자 이상이며, 영문/숫자/특수문자를 각각 1자 이상 포함하고 공백이 없어야 합니다."
             className="w-full rounded-xl border border-zinc-200 px-3 py-2 outline-none focus:ring-2 focus:ring-zinc-900/10"
-            placeholder="8자 이상"
+            placeholder="10자 이상 (영문/숫자/특수문자 포함)"
+          />
+          <p className="text-xs text-zinc-600">
+            10자 이상, 영문/숫자/특수문자 각각 1자 이상 포함 (공백 불가)
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor="confirmPassword">
+            비밀번호 확인
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            minLength={PASSWORD_MIN_LENGTH}
+            autoComplete="new-password"
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 outline-none focus:ring-2 focus:ring-zinc-900/10"
+            placeholder="비밀번호를 한 번 더 입력해주세요"
           />
         </div>
 

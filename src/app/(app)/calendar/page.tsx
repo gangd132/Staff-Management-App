@@ -8,7 +8,7 @@ export default async function CalendarPage() {
   if (!session) redirect("/login");
 
   const employees = await prisma.employee.findMany({
-    where: { userId: session.userId, isActive: true },
+    where: { userId: session.userId },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });

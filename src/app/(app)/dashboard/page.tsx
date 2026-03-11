@@ -10,7 +10,7 @@ export default async function DashboardPage() {
   const yyyyMmDd = today.toISOString().slice(0, 10);
 
   const [employeeCount, todayAttendances] = await Promise.all([
-    prisma.employee.count({ where: { userId: session.userId, isActive: true } }),
+    prisma.employee.count({ where: { userId: session.userId } }),
     prisma.attendance.findMany({
       where: { employee: { userId: session.userId }, workDate: new Date(yyyyMmDd) },
       select: {

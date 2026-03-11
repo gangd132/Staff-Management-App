@@ -11,14 +11,14 @@ export default async function EmployeesPage() {
 
   const employees = await prisma.employee.findMany({
     where: { userId: session.userId },
-    orderBy: [{ isActive: "desc" }, { name: "asc" }],
+    orderBy: { name: "asc" },
     select: {
       id: true,
       name: true,
       defaultStart: true,
       color: true,
       hourlyWage: true,
-      isActive: true,
+      restDayHours: true,
     },
   });
 
@@ -45,7 +45,7 @@ export default async function EmployeesPage() {
               defaultStart={e.defaultStart ? dateToTimeString(e.defaultStart) : null}
               color={e.color}
               hourlyWage={e.hourlyWage}
-              isActive={e.isActive}
+              restDayHours={e.restDayHours}
             />
           ))
         )}

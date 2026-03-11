@@ -3,14 +3,35 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
 import { redirect } from "next/navigation";
 
-const RegisterSchema = z.object({
-  bizName: z.string().min(1, "사업장명을 입력해주세요."),
-  email: z.string().email("이메일 형식이 올바르지 않습니다."),
-  password: z.string().min(8, "비밀번호는 8자 이상이어야 합니다."),
-});
+const RegisterSchema = z
+  .object({
+    bizName: z.string().min(1, "사업장명을 입력해주세요."),
+    email: z.string().email("이메일 형식이 올바르지 않습니다."),
+    password: z.string().min(1, "비밀번호를 입력해주세요."),
+    confirmPassword: z.string().min(1, "비밀번호 확인을 입력해주세요."),
+  })
+  .superRefine(({ password, confirmPassword }, ctx) => {
+    const policyResult = validatePasswordPolicy(password);
+    if (!policyResult.ok) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: policyResult.message,
+        path: ["password"],
+      });
+    }
+
+    if (password !== confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
 
 const LoginSchema = z.object({
   email: z.string().email("이메일 형식이 올바르지 않습니다."),
@@ -27,6 +48,7 @@ export async function registerAction(_: ActionState, formData: FormData): Promis
     bizName: formData.get("bizName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!parsed.success) {

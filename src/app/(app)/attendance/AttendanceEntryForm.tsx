@@ -28,10 +28,8 @@ export default function AttendanceEntryForm({
   const [startTime, setStartTime] = useState<string>(selectedEmployee?.defaultStart ?? "09:00");
   const [endTime, setEndTime] = useState<string>("18:00");
 
-  const endOptions = useMemo(() => {
-    const startIndex = HALF_HOUR_OPTIONS.indexOf(startTime);
-    return startIndex === -1 ? HALF_HOUR_OPTIONS : HALF_HOUR_OPTIONS.slice(startIndex + 1);
-  }, [startTime]);
+  // 자정 넘김 근무(예: 18:00~02:00)를 허용하므로 퇴근 시간은 전체 옵션 제공
+  const endOptions = HALF_HOUR_OPTIONS;
 
   const hoursPreview = useMemo(() => {
     try {
@@ -78,48 +76,70 @@ export default function AttendanceEntryForm({
           <label className="text-sm font-medium" htmlFor="startTime">
             출근 시간
           </label>
-          <select
-            id="startTime"
-            name="startTime"
-            required
-            value={startTime}
-            onChange={(e) => {
-              const next = e.target.value;
-              setStartTime(next);
-              const nextEndOptions = (() => {
-                const idx = HALF_HOUR_OPTIONS.indexOf(next);
-                return idx === -1 ? HALF_HOUR_OPTIONS : HALF_HOUR_OPTIONS.slice(idx + 1);
-              })();
-              if (!nextEndOptions.includes(endTime)) setEndTime(nextEndOptions[0] ?? endTime);
-            }}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            {HALF_HOUR_OPTIONS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <input
+              id="startTime"
+              name="startTime"
+              type="text"
+              required
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              placeholder="09:00"
+              className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            />
+            <select
+              aria-label="출근 시간 빠른 선택"
+              value={HALF_HOUR_OPTIONS.includes(startTime) ? startTime : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v) setStartTime(v);
+              }}
+              className="w-24 shrink-0 rounded-xl border border-zinc-200 bg-white px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            >
+              <option value="">선택</option>
+              {HALF_HOUR_OPTIONS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs text-zinc-500">직접 입력 또는 선택 (30분 단위, 예: 09:00, 18:30)</p>
         </div>
 
         <div className="space-y-1">
           <label className="text-sm font-medium" htmlFor="endTime">
             퇴근 시간
           </label>
-          <select
-            id="endTime"
-            name="endTime"
-            required
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            {endOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <input
+              id="endTime"
+              name="endTime"
+              type="text"
+              required
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              placeholder="18:00"
+              className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            />
+            <select
+              aria-label="퇴근 시간 빠른 선택"
+              value={endOptions.includes(endTime) ? endTime : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v) setEndTime(v);
+              }}
+              className="w-24 shrink-0 rounded-xl border border-zinc-200 bg-white px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            >
+              <option value="">선택</option>
+              {endOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs text-zinc-500">직접 입력 또는 선택 (30분 단위, 자정 넘김 가능 예: 02:00)</p>
         </div>
 
         <div className="flex items-end">

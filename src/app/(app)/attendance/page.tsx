@@ -18,7 +18,7 @@ export default async function AttendancePage({
   const workDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : today.toISOString().slice(0, 10);
 
   const employees = await prisma.employee.findMany({
-    where: { userId: session.userId, isActive: true },
+    where: { userId: session.userId },
     orderBy: { name: "asc" },
     select: { id: true, name: true, defaultStart: true },
   });

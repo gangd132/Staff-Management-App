@@ -46,7 +46,7 @@ export async function upsertAttendanceAction(
   const { workDate, employeeId, startTime, endTime } = parsed.data;
 
   const employee = await prisma.employee.findFirst({
-    where: { id: employeeId, userId: session.userId, isActive: true },
+    where: { id: employeeId, userId: session.userId },
     select: { id: true },
   });
   if (!employee) return { ok: false, message: "직원을 찾을 수 없습니다." };

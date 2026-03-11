@@ -23,6 +23,10 @@ const CreateEmployeeSchema = z.object({
     .string()
     .optional()
     .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 0), "시급은 0 이상의 숫자여야 합니다."),
+  restDayHours: z
+    .string()
+    .optional()
+    .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 24), "주휴 기준 시간은 0~24 사이여야 합니다."),
 });
 
 export async function createEmployeeAction(
@@ -37,13 +41,14 @@ export async function createEmployeeAction(
     defaultStart: formData.get("defaultStart") || undefined,
     color: formData.get("color") || undefined,
     hourlyWage: formData.get("hourlyWage") || undefined,
+    restDayHours: formData.get("restDayHours") || undefined,
   });
 
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "입력값을 확인해주세요." };
   }
 
-  const { name, defaultStart, color, hourlyWage } = parsed.data;
+  const { name, defaultStart, color, hourlyWage, restDayHours } = parsed.data;
 
   await prisma.employee.create({
     data: {
@@ -52,6 +57,7 @@ export async function createEmployeeAction(
       defaultStart: defaultStart ? timeStringToDate(defaultStart) : null,
       color: color || null,
       hourlyWage: hourlyWage ? Number(hourlyWage) : null,
+      restDayHours: restDayHours ? Number(restDayHours) : null,
     },
   });
 
@@ -74,6 +80,10 @@ const UpdateEmployeeSchema = z.object({
     .string()
     .optional()
     .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 0), "시급은 0 이상의 숫자여야 합니다."),
+  restDayHours: z
+    .string()
+    .optional()
+    .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 24), "주휴 기준 시간은 0~24 사이여야 합니다."),
 });
 
 export async function updateEmployeeAction(
@@ -89,13 +99,14 @@ export async function updateEmployeeAction(
     defaultStart: formData.get("defaultStart") || undefined,
     color: formData.get("color") || undefined,
     hourlyWage: formData.get("hourlyWage") || undefined,
+    restDayHours: formData.get("restDayHours") || undefined,
   });
 
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "입력값을 확인해주세요." };
   }
 
-  const { employeeId, name, defaultStart, color, hourlyWage } = parsed.data;
+  const { employeeId, name, defaultStart, color, hourlyWage, restDayHours } = parsed.data;
 
   const employee = await prisma.employee.findFirst({
     where: { id: employeeId, userId: session.userId },
@@ -110,29 +121,12 @@ export async function updateEmployeeAction(
       defaultStart: defaultStart ? timeStringToDate(defaultStart) : null,
       color: color || null,
       hourlyWage: hourlyWage ? Number(hourlyWage) : null,
+      restDayHours: restDayHours ? Number(restDayHours) : null,
     },
   });
 
   revalidatePath("/employees");
   return { ok: true };
-}
-
-export async function toggleEmployeeActiveAction(employeeId: string) {
-  const session = await getSessionFromCookies();
-  if (!session) redirect("/login");
-
-  const employee = await prisma.employee.findFirst({
-    where: { id: employeeId, userId: session.userId },
-    select: { id: true, isActive: true },
-  });
-  if (!employee) return;
-
-  await prisma.employee.update({
-    where: { id: employeeId },
-    data: { isActive: !employee.isActive },
-  });
-
-  revalidatePath("/employees");
 }
 
 export async function deleteEmployeeAction(employeeId: string) {

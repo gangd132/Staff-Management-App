@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: "/calendar", label: "달력" },
   { href: "/employees", label: "직원 관리" },
   { href: "/attendance", label: "근무 입력" },
-  { href: "/biweekly", label: "2주 집계" },
+  { href: "/biweekly", label: "주차별 집계" },
   { href: "/statistics", label: "월별 통계" },
   { href: "/settings", label: "설정" },
 ] as const;

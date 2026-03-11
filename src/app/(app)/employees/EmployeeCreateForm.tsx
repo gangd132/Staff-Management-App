@@ -55,32 +55,17 @@ export default function EmployeeCreateForm() {
           </label>
           <div className="flex items-center gap-3">
             <div
-              className="h-8 w-8 rounded-xl border border-zinc-200"
+              className="h-8 w-8 shrink-0 rounded-xl border border-zinc-200"
               style={{ backgroundColor: selectedColorValue || "#e4e4e7" }}
               aria-hidden
             />
-            <div className="flex flex-1 items-center gap-2">
-              <input
-                id="color"
-                type="color"
-                className="h-9 w-16 cursor-pointer rounded-md border border-zinc-200 bg-white px-1 py-1"
-                value={selectedColorValue || "#22c55e"}
-                onChange={(event) => {
-                  const nextColorValue = event.target.value;
-                  setSelectedColorValue(nextColorValue);
-                }}
-              />
-              <input
-                type="text"
-                className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-zinc-900/10"
-                value={selectedColorValue}
-                onChange={(event) => {
-                  const nextColorValue = event.target.value;
-                  setSelectedColorValue(nextColorValue);
-                }}
-                placeholder="#22c55e"
-              />
-            </div>
+            <input
+              id="color"
+              type="color"
+              className="h-9 w-16 cursor-pointer rounded-md border border-zinc-200 bg-white px-1 py-1"
+              value={selectedColorValue || "#22c55e"}
+              onChange={(e) => setSelectedColorValue(e.target.value)}
+            />
           </div>
           <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
             <input
@@ -88,12 +73,8 @@ export default function EmployeeCreateForm() {
               type="checkbox"
               className="h-3 w-3 rounded border-zinc-300"
               checked={!selectedColorValue}
-              onChange={(event) => {
-                if (event.target.checked) {
-                  setSelectedColorValue("");
-                } else {
-                  setSelectedColorValue("#22c55e");
-                }
+              onChange={(e) => {
+                setSelectedColorValue(e.target.checked ? "" : "#22c55e");
               }}
             />
             <label htmlFor="color-none" className="cursor-pointer select-none">
@@ -114,6 +95,24 @@ export default function EmployeeCreateForm() {
             className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
             placeholder="예: 12000"
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor="restDayHours">
+            주휴수당 기준 시간(선택)
+          </label>
+          <input
+            id="restDayHours"
+            name="restDayHours"
+            type="number"
+            min={0}
+            max={24}
+            step={1}
+            inputMode="numeric"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            placeholder="8"
+          />
+          <p className="text-xs text-zinc-500">주 15시간 이상 근무 시 하루 일당으로 지급할 시간 수 (예: 8 = 8시간분)</p>
         </div>
 
         {state?.ok === false && (

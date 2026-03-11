@@ -27,14 +27,14 @@ export default async function StatisticsPage({
   const monthEndExclusive = addMonths(monthStart, 1);
 
   const employees = await prisma.employee.findMany({
-    where: { userId: session.userId, isActive: true },
+    where: { userId: session.userId },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, hourlyWage: true },
+    select: { id: true, name: true, hourlyWage: true, restDayHours: true },
   });
 
   const attendances = await prisma.attendance.findMany({
     where: {
-      employee: { userId: session.userId, isActive: true },
+      employee: { userId: session.userId },
       workDate: { gte: monthStart, lt: monthEndExclusive },
     },
     select: { employeeId: true, workDate: true, hoursWorked: true },
@@ -42,15 +42,33 @@ export default async function StatisticsPage({
 
   const perEmployee = new Map<
     string,
-    { totalHours: number; workDates: Set<string>; hourlyWage: number | null }
+    {
+      totalHours: number;
+      workDates: Set<string>;
+      hourlyWage: number | null;
+      restDayHours: number | null;
+      /** 주(월~일)별 근무시간. key = 해당 주 월요일 yyyy-MM-dd */
+      weekHours: Map<string, number>;
+    }
   >();
-  for (const e of employees) perEmployee.set(e.id, { totalHours: 0, workDates: new Set(), hourlyWage: e.hourlyWage });
+  for (const e of employees) {
+    perEmployee.set(e.id, {
+      totalHours: 0,
+      workDates: new Set(),
+      hourlyWage: e.hourlyWage,
+      restDayHours: e.restDayHours,
+      weekHours: new Map(),
+    });
+  }
 
   for (const a of attendances) {
     const bucket = perEmployee.get(a.employeeId);
     if (!bucket) continue;
-    bucket.totalHours += Number(a.hoursWorked);
+    const hours = Number(a.hoursWorked);
+    bucket.totalHours += hours;
     bucket.workDates.add(format(a.workDate, "yyyy-MM-dd"));
+    const weekKey = format(startOfWeek(a.workDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    bucket.weekHours.set(weekKey, (bucket.weekHours.get(weekKey) ?? 0) + hours);
   }
 
   // 주차별(월~일) 총 근무시간
@@ -82,7 +100,9 @@ export default async function StatisticsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">월별 통계</h1>
-        <p className="mt-1 text-sm text-zinc-600">월 총 근무시간/근무일수/주차별 추이/예상 인건비를 확인하세요.</p>
+        <p className="mt-1 text-sm text-zinc-600">
+          월 총 근무시간(4시간 이상 시 0.5시간 휴게 공제 반영)·근무일수·주차별 추이·기본급·주휴수당·예상 월급을 확인하세요.
+        </p>
       </div>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
@@ -131,22 +151,55 @@ export default async function StatisticsPage({
               <th className="px-4 py-3 font-medium">월 총 근무시간</th>
               <th className="px-4 py-3 font-medium">근무일수</th>
               <th className="px-4 py-3 font-medium">시급</th>
-              <th className="px-4 py-3 font-medium">예상 인건비</th>
+              <th className="px-4 py-3 font-medium">기본급</th>
+              <th className="px-4 py-3 font-medium">주휴수당</th>
+              <th className="px-4 py-3 font-medium">예상 월급</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200">
             {employees.map((e) => {
-              const bucket = perEmployee.get(e.id) ?? { totalHours: 0, workDates: new Set<string>(), hourlyWage: null };
-              const hourlyWage = bucket.hourlyWage;
-              const estimatedWage = hourlyWage ? bucket.totalHours * hourlyWage : null;
+              const bucket = perEmployee.get(e.id);
+              const defaultBucket = {
+                totalHours: 0,
+                workDates: new Set<string>(),
+                hourlyWage: null as number | null,
+                restDayHours: null as number | null,
+                weekHours: new Map<string, number>(),
+              };
+              const b = bucket ?? defaultBucket;
+              const hourlyWage = b.hourlyWage;
+              const restDayHours = b.restDayHours ?? 8;
+              const basePay = hourlyWage ? b.totalHours * hourlyWage : null;
+              let restPay = 0;
+              if (hourlyWage) {
+                for (const [, weekH] of b.weekHours) {
+                  if (weekH >= 15) restPay += restDayHours * hourlyWage;
+                }
+              }
+              const totalPay = basePay !== null ? basePay + restPay : null;
               return (
                 <tr key={e.id}>
                   <td className="px-4 py-3 font-medium">{e.name}</td>
-                  <td className="px-4 py-3">{bucket.totalHours.toFixed(1)}h</td>
-                  <td className="px-4 py-3">{bucket.workDates.size}일</td>
+                  <td className="px-4 py-3">{b.totalHours.toFixed(1)}h</td>
+                  <td className="px-4 py-3">{b.workDates.size}일</td>
                   <td className="px-4 py-3">{hourlyWage ? `${hourlyWage.toLocaleString()}원` : "-"}</td>
                   <td className="px-4 py-3">
-                    {estimatedWage === null ? "-" : `${Math.round(estimatedWage).toLocaleString()}원`}
+                    {basePay === null ? "-" : `${Math.round(basePay).toLocaleString()}원`}
+                  </td>
+                  <td className="px-4 py-3">
+                    {hourlyWage ? `${Math.round(restPay).toLocaleString()}원` : "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {totalPay === null ? "-" : `${Math.round(totalPay).toLocaleString()}원`}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/statistics/detail?month=${csvMonth}&employeeId=${e.id}`}
+                      className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium hover:bg-zinc-50"
+                    >
+                      상세 보기
+                    </Link>
                   </td>
                 </tr>
               );

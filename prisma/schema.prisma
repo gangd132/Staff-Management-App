@@ -30,9 +30,10 @@ model Employee {
   userId       String       @map("user_id")
   name         String
   defaultStart DateTime?    @db.Time(0) @map("default_start")
-  color        String?      // 예: "#22c55e"
-  hourlyWage   Int?         @map("hourly_wage") // 원 단위
-  isActive     Boolean      @default(true) @map("is_active")
+  color         String?      // 예: "#22c55e"
+  hourlyWage    Int?         @map("hourly_wage") // 원 단위
+  restDayHours  Int?         @map("rest_day_hours") // 주휴수당 하루 일당에 해당하는 시간(예: 8시간)
+  isActive      Boolean      @default(true) @map("is_active")
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
 

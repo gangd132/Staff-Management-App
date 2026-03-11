@@ -37,17 +37,31 @@ export function timeStringToMinutes(value: string) {
   return hh * 60 + mm;
 }
 
+/** 하루 기준 분 수 (24 * 60) */
+const MINUTES_PER_DAY = 24 * 60;
+
+/** 4시간 이상 근무 시 공제되는 휴게시간(시간 단위) */
+const BREAK_HOURS_WHEN_4H_OR_MORE = 0.5;
+
+/**
+ * 출근~퇴근 근무시간(시간 단위) 계산.
+ * 퇴근이 출근보다 이전이면 자정을 넘기는 근무(예: 18:00 출근 ~ 02:00 퇴근)로 간주하여 다음날 퇴근으로 계산합니다.
+ * 하루 4시간 이상 근무 시 30분 휴게시간을 공제한 값을 반환합니다.
+ */
 export function calculateHoursWorked(startTime: string, endTime: string) {
   const startMinutes = timeStringToMinutes(startTime);
-  const endMinutes = timeStringToMinutes(endTime);
+  let endMinutes = timeStringToMinutes(endTime);
   if (endMinutes <= startMinutes) {
-    throw new Error("퇴근시간은 출근시간 이후여야 합니다.");
+    endMinutes += MINUTES_PER_DAY;
   }
   const diffMinutes = endMinutes - startMinutes;
-  // 30분 단위 입력이므로 30으로 나누어떨어져야 함
   if (diffMinutes % 30 !== 0) {
     throw new Error("근무시간은 30분 단위로만 계산됩니다.");
   }
-  return diffMinutes / 60;
+  let hours = diffMinutes / 60;
+  if (hours >= 4) {
+    hours -= BREAK_HOURS_WHEN_4H_OR_MORE;
+  }
+  return hours;
 }
 

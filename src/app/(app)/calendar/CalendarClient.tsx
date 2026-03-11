@@ -3,6 +3,7 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import koLocale from "@fullcalendar/core/locales/ko";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -73,12 +74,14 @@ export default function CalendarClient({ employees }: { employees: EmployeeOptio
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
+          locales={[koLocale]}
+          locale="ko"
           height="auto"
           events={events}
           datesSet={(arg) => {
-            setRange({
-              start: arg.startStr,
-              end: arg.endStr,
+            setRange((prev) => {
+              if (prev?.start === arg.startStr && prev?.end === arg.endStr) return prev;
+              return { start: arg.startStr, end: arg.endStr };
             });
           }}
           dateClick={(arg) => {

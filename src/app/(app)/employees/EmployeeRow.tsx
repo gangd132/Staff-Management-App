@@ -1,13 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { buildHalfHourOptions } from "@/lib/timeOnly";
-import {
-  toggleEmployeeActiveAction,
-  deleteEmployeeAction,
-  updateEmployeeAction,
-  type EmployeeActionState,
-} from "@/app/(app)/employees/actions";
+import { deleteEmployeeAction, updateEmployeeAction, type EmployeeActionState } from "@/app/(app)/employees/actions";
 
 type Props = {
   employeeId: string;
@@ -15,7 +10,7 @@ type Props = {
   defaultStart: string | null;
   color: string | null;
   hourlyWage: number | null;
-  isActive: boolean;
+  restDayHours: number | null;
 };
 
 const initialState: EmployeeActionState = { ok: true };
@@ -27,10 +22,10 @@ export default function EmployeeRow({
   defaultStart,
   color,
   hourlyWage,
-  isActive,
+  restDayHours,
 }: Props) {
   const [state, formAction, pending] = useActionState(updateEmployeeAction, initialState);
-  const toggleAction = toggleEmployeeActiveAction.bind(null, employeeId);
+  const [selectedColorValue, setSelectedColorValue] = useState<string>(color ?? "");
   const deleteAction = deleteEmployeeAction.bind(null, employeeId);
 
   return (
@@ -42,21 +37,10 @@ export default function EmployeeRow({
             style={{ backgroundColor: color ?? "#e4e4e7" }}
             aria-hidden
           />
-          <div className="text-sm font-semibold">
-            {name}{" "}
-            {!isActive && <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs">비활성</span>}
-          </div>
+          <div className="text-sm font-semibold">{name}</div>
         </div>
 
         <div className="flex items-center gap-2">
-          <form action={toggleAction}>
-            <button
-              type="submit"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs hover:bg-zinc-50"
-            >
-              {isActive ? "비활성화" : "활성화"}
-            </button>
-          </form>
           <form
             action={async () => {
               const isConfirmed = window.confirm("이 직원을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.");
@@ -113,13 +97,35 @@ export default function EmployeeRow({
           <label className="text-sm font-medium" htmlFor={`color-${employeeId}`}>
             색상 태그(선택)
           </label>
-          <input
-            id={`color-${employeeId}`}
-            name="color"
-            defaultValue={color ?? ""}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-            placeholder="#22c55e"
-          />
+          <div className="flex items-center gap-3">
+            <div
+              className="h-8 w-8 shrink-0 rounded-xl border border-zinc-200"
+              style={{ backgroundColor: selectedColorValue || "#e4e4e7" }}
+              aria-hidden
+            />
+            <input
+              id={`color-${employeeId}`}
+              type="color"
+              className="h-9 w-16 cursor-pointer rounded-md border border-zinc-200 bg-white px-1 py-1"
+              value={selectedColorValue || "#22c55e"}
+              onChange={(e) => setSelectedColorValue(e.target.value)}
+            />
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
+            <input
+              id={`color-none-${employeeId}`}
+              type="checkbox"
+              className="h-3 w-3 rounded border-zinc-300"
+              checked={!selectedColorValue}
+              onChange={(e) => {
+                setSelectedColorValue(e.target.checked ? "" : "#22c55e");
+              }}
+            />
+            <label htmlFor={`color-none-${employeeId}`} className="cursor-pointer select-none">
+              색상 사용 안 함
+            </label>
+          </div>
+          <input type="hidden" name="color" value={selectedColorValue} />
         </div>
 
         <div className="space-y-1">
@@ -134,6 +140,25 @@ export default function EmployeeRow({
             className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
             placeholder="예: 12000"
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor={`restDayHours-${employeeId}`}>
+            주휴수당 기준 시간(선택)
+          </label>
+          <input
+            id={`restDayHours-${employeeId}`}
+            name="restDayHours"
+            type="number"
+            min={0}
+            max={24}
+            step={1}
+            defaultValue={restDayHours ?? ""}
+            inputMode="numeric"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+            placeholder="8"
+          />
+          <p className="text-xs text-zinc-500">주 15시간 이상 시 하루 일당으로 지급할 시간 수</p>
         </div>
 
         {state?.ok === false && (

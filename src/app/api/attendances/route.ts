@@ -17,8 +17,20 @@ function toYyyyMmDd(date: Date) {
 function combineDateAndTime(workDate: Date, timeOnly: Date) {
   const datePart = toYyyyMmDd(workDate);
   const timePart = dateToTimeString(timeOnly);
-  // FullCalendar는 기본적으로 로컬 타임존으로 렌더링하므로 타임존 오프셋 없이 전달
   return `${datePart}T${timePart}:00`;
+}
+
+/** 퇴근 시각이 출근 시각보다 이전이면 자정 넘김(다음날 퇴근)으로 간주 */
+function isOvernightShift(startTime: Date, endTime: Date) {
+  const startMs = startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
+  const endMs = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
+  return endMs <= startMs;
+}
+
+function addOneDay(date: Date) {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return next;
 }
 
 export async function GET(request: Request) {
@@ -62,16 +74,21 @@ export async function GET(request: Request) {
     },
   });
 
-  const events = attendances.map((a) => ({
-    id: a.id,
-    title: `${a.employee.name} ${dateToTimeString(a.startTime)}~${dateToTimeString(a.endTime)} (${Number(
-      a.hoursWorked
-    ).toFixed(1)}h)`,
-    start: combineDateAndTime(a.workDate, a.startTime),
-    end: combineDateAndTime(a.workDate, a.endTime),
-    backgroundColor: a.employee.color ?? undefined,
-    borderColor: a.employee.color ?? undefined,
-  }));
+  const events = attendances.map((a) => {
+    const endDate = isOvernightShift(a.startTime, a.endTime)
+      ? addOneDay(a.workDate)
+      : a.workDate;
+    return {
+      id: a.id,
+      title: `${a.employee.name} ${dateToTimeString(a.startTime)}~${dateToTimeString(a.endTime)} (${Number(
+        a.hoursWorked
+      ).toFixed(1)}h)`,
+      start: combineDateAndTime(a.workDate, a.startTime),
+      end: combineDateAndTime(endDate, a.endTime),
+      backgroundColor: a.employee.color ?? undefined,
+      borderColor: a.employee.color ?? undefined,
+    };
+  });
 
   return NextResponse.json(events);
 }
