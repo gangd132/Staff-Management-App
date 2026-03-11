@@ -56,7 +56,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "날짜 범위가 올바르지 않습니다." }, { status: 400 });
   }
 
-  const attendances = await prisma.attendance.findMany({
+  /** API 응답용 출퇴근 레코드 타입 (Prisma select와 동일) */
+  type AttendanceRow = {
+    id: string;
+    workDate: Date;
+    startTime: Date;
+    endTime: Date;
+    hoursWorked: unknown;
+    employee: { name: string; color: string | null };
+  };
+
+  const attendances: AttendanceRow[] = await prisma.attendance.findMany({
     where: {
       employee: {
         userId: session.userId,

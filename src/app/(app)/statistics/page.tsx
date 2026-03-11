@@ -5,6 +5,14 @@ import { redirect } from "next/navigation";
 import { addMonths, endOfMonth, format, parse, startOfMonth, startOfWeek } from "date-fns";
 import StatisticsChart from "@/app/(app)/statistics/StatisticsChart";
 
+/** 월별 통계 테이블에 사용하는 직원 타입 (Prisma select와 동일) */
+type StatisticsEmployee = {
+  id: string;
+  name: string;
+  hourlyWage: number | null;
+  restDayHours: number | null;
+};
+
 function toMonthString(date: Date) {
   return format(date, "yyyy-MM");
 }
@@ -26,11 +34,17 @@ export default async function StatisticsPage({
   const monthStart = startOfMonth(baseMonth);
   const monthEndExclusive = addMonths(monthStart, 1);
 
-  const employees = await prisma.employee.findMany({
+  // Prisma 생성 타입이 스키마보다 늦게 갱신될 수 있어 select/결과 타입 단언 사용
+  const employees = (await prisma.employee.findMany({
     where: { userId: session.userId },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, hourlyWage: true, restDayHours: true },
-  });
+    select: { id: true, name: true, hourlyWage: true, restDayHours: true } as {
+      id: true;
+      name: true;
+      hourlyWage: true;
+      restDayHours: true;
+    },
+  })) as StatisticsEmployee[];
 
   const attendances = await prisma.attendance.findMany({
     where: {

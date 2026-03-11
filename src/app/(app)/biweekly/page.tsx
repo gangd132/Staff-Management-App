@@ -34,7 +34,9 @@ export default async function BiweeklyPage({
   const monthEnd = endOfMonth(monthStart);
   const monthEndExclusive = addMonths(monthStart, 1);
 
-  const employees = await prisma.employee.findMany({
+  /** 주차별 집계용 직원 타입 (Prisma select와 동일) */
+  type BiweeklyEmployee = { id: string; name: string };
+  const employees: BiweeklyEmployee[] = await prisma.employee.findMany({
     where: { userId: session.userId },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
@@ -124,7 +126,7 @@ export default async function BiweeklyPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {employees.map((e: { id: string; name: string }) => {
+              {employees.map((e) => {
                 const agg = byEmployee.get(e.id) ?? {
                   week1: 0,
                   week2: 0,
