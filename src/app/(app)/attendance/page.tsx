@@ -17,11 +17,18 @@ export default async function AttendancePage({
   const today = new Date();
   const workDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : today.toISOString().slice(0, 10);
 
-  const employees = await prisma.employee.findMany({
-    where: { userId: session.userId },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, defaultStart: true },
-  });
+  const [employees, user] = await Promise.all([
+    prisma.employee.findMany({
+      where: { userId: session.userId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, defaultStart: true },
+    }),
+    (prisma.user.findUnique({
+      where: { id: session.userId },
+    }) as Promise<{ autoBreakDeduction: boolean } | null>),
+  ]);
+
+  const autoBreakDeduction = user?.autoBreakDeduction ?? true;
 
   const attendances = await prisma.attendance.findMany({
     where: { employee: { userId: session.userId }, workDate: new Date(workDate) },
@@ -72,6 +79,7 @@ export default async function AttendancePage({
       ) : (
         <AttendanceEntryForm
           workDate={workDate}
+          autoBreakDeduction={autoBreakDeduction}
           employees={employees.map((e: any) => ({
             id: e.id,
             name: e.name,

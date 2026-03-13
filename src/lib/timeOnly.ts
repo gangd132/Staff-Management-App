@@ -46,11 +46,10 @@ const BREAK_HOURS_WHEN_4H_OR_MORE = 0.5;
 const BREAK_HOURS_WHEN_8H_OR_MORE = 1;
 
 /**
- * 출근~퇴근 근무시간(시간 단위) 계산.
- * 퇴근이 출근보다 이전이면 자정을 넘기는 근무(예: 18:00 출근 ~ 02:00 퇴근)로 간주하여 다음날 퇴근으로 계산합니다.
- * 휴게 공제: 4시간 이상 시 0.5시간, 8시간 이상 시 1시간 공제한 값을 반환합니다.
+ * 출근~퇴근 순수 근무시간(시간 단위) 계산. 휴게 공제 없음.
+ * 퇴근이 출근보다 이전이면 자정을 넘기는 근무로 간주하여 다음날 퇴근으로 계산합니다.
  */
-export function calculateHoursWorked(startTime: string, endTime: string) {
+export function calculateHoursWorkedRaw(startTime: string, endTime: string) {
   const startMinutes = timeStringToMinutes(startTime);
   let endMinutes = timeStringToMinutes(endTime);
   if (endMinutes <= startMinutes) {
@@ -60,12 +59,34 @@ export function calculateHoursWorked(startTime: string, endTime: string) {
   if (diffMinutes % 30 !== 0) {
     throw new Error("근무시간은 30분 단위로만 계산됩니다.");
   }
-  let hours = diffMinutes / 60;
+  return diffMinutes / 60;
+}
+
+/**
+ * 출근~퇴근 근무시간(시간 단위) 계산. 휴게 공제 적용.
+ * 퇴근이 출근보다 이전이면 자정을 넘기는 근무(예: 18:00 출근 ~ 02:00 퇴근)로 간주하여 다음날 퇴근으로 계산합니다.
+ * 휴게 공제: 4시간 이상 시 0.5시간, 8시간 이상 시 1시간 공제한 값을 반환합니다.
+ */
+export function calculateHoursWorked(startTime: string, endTime: string) {
+  let hours = calculateHoursWorkedRaw(startTime, endTime);
   if (hours >= 8) {
     hours -= BREAK_HOURS_WHEN_8H_OR_MORE;
   } else if (hours >= 4) {
     hours -= BREAK_HOURS_WHEN_4H_OR_MORE;
   }
   return hours;
+}
+
+/**
+ * autoBreakDeduction 설정에 따라 휴게 공제를 적용하거나 적용하지 않고 근무시간을 계산합니다.
+ */
+export function calculateHoursWorkedWithSetting(
+  startTime: string,
+  endTime: string,
+  autoBreakDeduction: boolean
+) {
+  return autoBreakDeduction
+    ? calculateHoursWorked(startTime, endTime)
+    : calculateHoursWorkedRaw(startTime, endTime);
 }
 

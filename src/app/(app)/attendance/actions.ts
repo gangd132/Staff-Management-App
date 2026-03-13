@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromCookies } from "@/lib/session";
 import { redirect } from "next/navigation";
 import {
-  calculateHoursWorked,
+  calculateHoursWorkedWithSetting,
   isValidHalfHourTimeString,
   timeStringToDate,
 } from "@/lib/timeOnly";
@@ -45,15 +45,22 @@ export async function upsertAttendanceAction(
 
   const { workDate, employeeId, startTime, endTime } = parsed.data;
 
-  const employee = await prisma.employee.findFirst({
-    where: { id: employeeId, userId: session.userId },
-    select: { id: true },
-  });
+  const [employee, user] = await Promise.all([
+    prisma.employee.findFirst({
+      where: { id: employeeId, userId: session.userId },
+      select: { id: true },
+    }),
+    (prisma.user.findUnique({
+      where: { id: session.userId },
+    }) as Promise<{ autoBreakDeduction: boolean } | null>),
+  ]);
   if (!employee) return { ok: false, message: "직원을 찾을 수 없습니다." };
+
+  const shouldDeductBreak = user?.autoBreakDeduction ?? true;
 
   let hoursWorked: number;
   try {
-    hoursWorked = calculateHoursWorked(startTime, endTime);
+    hoursWorked = calculateHoursWorkedWithSetting(startTime, endTime, shouldDeductBreak);
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "근무시간 계산에 실패했습니다." };
   }
